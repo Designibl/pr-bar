@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""Poll GitHub via the gh CLI and write the PR cache. Run by the launch agent."""
+import json
+import os
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import prbar_common as c  # noqa: E402
+
+QUERY = """
+query($q: String!) {
+  search(query: $q, type: ISSUE, first: 50) {
+    nodes {
+      ... on PullRequest {
+        number title url isDraft body headRefName updatedAt
+        additions deletions changedFiles
+        mergeable mergeStateStatus reviewDecision
+        author { login }
+        repository { nameWithOwner }
+        commits(last: 1) { nodes { commit { committedDate statusCheckRollup { state } } } }
+        comments(last: 30) { nodes { body } }
+      }
+    }
+  }
+}
+"""
+
+
+def gh(*args):
+    env = dict(os.environ, PATH=c.full_path(), GH_PROMPT_DISABLED="1")
+    res = subprocess.run(["gh", *args], capture_output=True, text=True, env=env, timeout=120)
+    if res.returncode != 0:
+        raise RuntimeError((res.stderr or res.stdout).strip() or "gh failed")
+    return res.stdout
+
+
+def search(q):
+    data = json.loads(gh("api", "graphql", "-f", "query=" + QUERY, "-f", "q=" + q))
+    return [n for n in data["data"]["search"]["nodes"] if n]
+
+
+def write_cache(payload):
+    c.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(c.CONFIG_DIR))
+    with os.fdopen(fd, "w") as f:
+        json.dump(payload, f)
+    os.replace(tmp, str(c.CACHE_FILE))
+
+
+def main():
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        login = gh("api", "user", "--jq", ".login").strip()
+        mine = search("is:pr is:open archived:false author:%s sort:updated-desc" % login)
+        asked = search(
+            "is:pr is:open archived:false review-requested:%s -author:%s sort:updated-desc"
+            % (login, login)
+        )
+        prs = [c.normalise(n) for n in mine] + [c.normalise(n, True) for n in asked]
+        write_cache({"fetched_at": now, "login": login, "prs": prs, "error": None})
+    except Exception as exc:  # keep stale data, surface the error in the menu
+        old = c.load_cache() or {"prs": [], "login": None, "fetched_at": None}
+        old["error"] = str(exc)[:300]
+        old["error_at"] = now
+        write_cache(old)
+        print("prbar-fetch: %s" % exc, file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

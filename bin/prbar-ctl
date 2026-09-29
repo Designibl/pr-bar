@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+"""Actions invoked from the SwiftBar menu.
+
+Usage:
+  prbar-ctl refresh
+  prbar-ctl set-interval <seconds>
+  prbar-ctl install-agent            (write + load the launch agent)
+  prbar-ctl uninstall-agent
+  prbar-ctl copy <md|slack|text> <all|review>
+  prbar-ctl toggle-agent <binary>
+  prbar-ctl review <binary> <pr-url>
+  prbar-ctl session <binary>
+"""
+import os
+import plistlib
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import prbar_common as c  # noqa: E402
+
+FETCH = str(c.BIN / "prbar-fetch")
+
+
+def run(*cmd, **kw):
+    return subprocess.run(list(cmd), capture_output=True, text=True, **kw)
+
+
+def swiftbar_refresh():
+    run("open", "-g", "swiftbar://refreshallplugins")
+
+
+def notify(msg):
+    run("osascript", "-e", 'display notification %s with title "PR Bar"' % _as(msg))
+
+
+def _as(s):
+    return '"%s"' % s.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def write_plist(interval):
+    c.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    c.PLIST.parent.mkdir(parents=True, exist_ok=True)
+    data = {
+        "Label": c.LABEL,
+        "ProgramArguments": ["/usr/bin/python3", FETCH],
+        "StartInterval": int(interval),
+        "RunAtLoad": True,
+        "EnvironmentVariables": {"PATH": c.full_path()},
+        "StandardErrorPath": str(c.CONFIG_DIR / "fetch.log"),
+        "StandardOutPath": str(c.CONFIG_DIR / "fetch.log"),
+    }
+    with open(c.PLIST, "wb") as f:
+        plistlib.dump(data, f)
+
+
+def load_agent():
+    domain = "gui/%d" % os.getuid()
+    run("launchctl", "bootout", "%s/%s" % (domain, c.LABEL))
+    res = run("launchctl", "bootstrap", domain, str(c.PLIST))
+    if res.returncode != 0:
+        print(res.stderr, file=sys.stderr)
+    return res.returncode
+
+
+def terminal_run(command):
+    """Run a shell command in a new Terminal.app window."""
+    script = 'tell application "Terminal"\nactivate\ndo script %s\nend tell' % _as(command)
+    run("osascript", "-e", script)
+
+
+def main(argv):
+    if not argv:
+        print(__doc__)
+        return 2
+    cmd, args = argv[0], argv[1:]
+
+    if cmd == "refresh":
+        run("/usr/bin/python3", FETCH)
+        swiftbar_refresh()
+    elif cmd == "set-interval":
+        cfg = c.load_config()
+        cfg["interval"] = int(args[0])
+        c.save_config(cfg)
+        write_plist(cfg["interval"])
+        load_agent()
+        swiftbar_refresh()
+    elif cmd == "install-agent":
+        write_plist(c.load_config()["interval"])
+        return load_agent()
+    elif cmd == "uninstall-agent":
+        run("launchctl", "bootout", "gui/%d/%s" % (os.getuid(), c.LABEL))
+        if c.PLIST.exists():
+            c.PLIST.unlink()
+    elif cmd == "copy":
+        fmt, scope = args[0], args[1]
+        cache = c.load_cache() or {"prs": []}
+        text = c.format_summary(cache["prs"], fmt, scope)
+        subprocess.run(["pbcopy"], input=text, text=True)
+        notify("Copied %s summary (%s)" % (fmt, scope))
+    elif cmd == "toggle-agent":
+        cfg = c.load_config()
+        dis = set(cfg.get("disabled_agents", []))
+        dis ^= {args[0]}
+        cfg["disabled_agents"] = sorted(dis)
+        c.save_config(cfg)
+        swiftbar_refresh()
+    elif cmd == "review":
+        binary, url = args[0], args[1]
+        prompt = (
+            "Review pull request %s. Use the gh CLI to read the description, diff, "
+            "CI status and existing comments, then give me concise, actionable review feedback." % url
+        )
+        terminal_run("%s %s" % (shlex.quote(binary), shlex.quote(prompt)))
+    elif cmd == "session":
+        terminal_run(shlex.quote(args[0]))
+    else:
+        print(__doc__)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
