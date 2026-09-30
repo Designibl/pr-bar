@@ -39,7 +39,14 @@ AGENTS = {
     "codex": "Codex CLI",
     "gemini": "Gemini CLI",
     "opencode": "opencode",
+    "claude-squad": "Claude Squad",
 }
+
+# agents whose executable is named differently from their key (first found wins)
+EXECUTABLES = {"claude-squad": ["cs", "claude-squad"]}
+
+# agents that manage their own sessions/worktrees and can't take an initial prompt
+INTERACTIVE = {"claude-squad"}
 
 DEFAULT_CONFIG = {"interval": 300, "disabled_agents": []}
 
@@ -104,9 +111,10 @@ def resolve_agent(binary):
     override = load_config().get("agent_paths", {}).get(binary)
     if override and os.access(os.path.expanduser(override), os.X_OK):
         return os.path.expanduser(override)
-    found = shutil.which(binary, path=full_path())
-    if found:
-        return found
+    for exe in EXECUTABLES.get(binary, [binary]):
+        found = shutil.which(exe, path=full_path())
+        if found:
+            return found
     return _desktop_claude() if binary == "claude" else None
 
 
@@ -292,3 +300,47 @@ def format_summary(prs, fmt="md", scope="all"):
                 lines.append("- %s (%s) %s" % (label, meta, pr["url"]))
         lines.append("")
     return "\n".join(lines).strip() or "No open pull requests."
+
+
+REPO_SEARCH_ROOTS = ["~/Developer", "~/code", "~/src", "~/Projects", "~/dev"]
+_SKIP = {"node_modules", "Library", "vendor", ".git", "build", "dist"}
+
+
+def find_repo_dir(repo, max_depth=4):
+    """Local clone of owner/name: config `repo_dirs`, else a bounded scan of common code folders."""
+    import subprocess
+    cfg = load_config()
+    mapped = cfg.get("repo_dirs", {}).get(repo)
+    if mapped and Path(mapped).expanduser().is_dir():
+        return str(Path(mapped).expanduser())
+    want = repo.lower()
+    roots = [Path(r).expanduser() for r in cfg.get("code_dirs", REPO_SEARCH_ROOTS)]
+
+    def walk(d, depth):
+        if (d / ".git").exists():
+            try:
+                url = subprocess.run(["/usr/bin/git", "-C", str(d), "remote", "get-url", "origin"],
+                                     capture_output=True, text=True, timeout=5).stdout.strip().lower()
+            except Exception:
+                url = ""
+            if url.removesuffix(".git").endswith(want):
+                return str(d)
+            return None
+        if depth >= max_depth:
+            return None
+        try:
+            kids = sorted(k for k in d.iterdir() if k.is_dir() and not k.name.startswith(".") and k.name not in _SKIP)
+        except OSError:
+            return None
+        for k in kids:
+            hit = walk(k, depth + 1)
+            if hit:
+                return hit
+        return None
+
+    for r in roots:
+        if r.is_dir():
+            hit = walk(r, 0)
+            if hit:
+                return hit
+    return None

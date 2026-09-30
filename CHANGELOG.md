@@ -4,6 +4,8 @@ Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](htt
 
 ## [Unreleased]
 ### Added
+- Claude Squad (`cs`) support: start a session or open a review in the PR's local clone.
+### Added
 - **Update PR Bar** menu item, with an indicator when your clone is behind `main`.
 
 ## [0.1.0] - 2026-09-30
