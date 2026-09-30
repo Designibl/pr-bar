@@ -42,6 +42,19 @@ This symlinks the plugin into your SwiftBar plugin folder and loads the launch a
 
 Uninstall with `./uninstall.sh`.
 
+## Updating
+
+The plugin is a symlink into your clone and the launch agent runs from it, so updating is just:
+
+```bash
+cd pr-bar
+git checkout main && git pull
+./install.sh   # optional, safe to re-run: reloads the launch agent
+```
+
+Your settings in `~/.config/prbar/` are kept. The current version is shown in the menu footer; see
+[Releases](../../releases) and [CHANGELOG.md](CHANGELOG.md). To pin a version: `git checkout v0.1.0`.
+
 ## How it works
 
 ```

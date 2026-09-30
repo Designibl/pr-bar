@@ -166,7 +166,7 @@ def main():
     # --- footer / settings
     fetched = cache.get("fetched_at")
     ago = c.fmt_age(c.age_seconds(fetched)) if fetched else "never"
-    out("@%s · updated %s ago" % (cache.get("login") or "?", ago), color=GRAY)
+    out("@%s · updated %s ago · v%s" % (cache.get("login") or "?", ago, c.version()), color=GRAY)
     ctl("Refresh now", "refresh", refresh=True, sfimage="arrow.clockwise")
     out("Settings", sfimage="gearshape")
     out("Poll interval", 1)

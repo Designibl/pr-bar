@@ -12,6 +12,15 @@ CONFIG_DIR = Path(os.environ.get("PRBAR_HOME", str(Path.home() / ".config" / "pr
 CONFIG_FILE = CONFIG_DIR / "config.json"
 CACHE_FILE = CONFIG_DIR / "cache.json"
 LABEL = "com.prbar.agent"
+
+
+def version():
+    try:
+        return (ROOT / "VERSION").read_text().strip()
+    except OSError:
+        return "dev"
+
+
 PLIST = Path.home() / "Library" / "LaunchAgents" / (LABEL + ".plist")
 
 INTERVALS = [

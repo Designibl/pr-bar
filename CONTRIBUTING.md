@@ -16,6 +16,11 @@ Thanks for helping improve PR Bar!
 - CI workflows from first-time and external contributors do **not** run until the maintainer approves them.
 - A maintainer (code owner) must review and approve every merge.
 
+## Releases (maintainers)
+
+Versions follow SemVer. To release: update `VERSION` and `CHANGELOG.md` in a PR, merge it, then tag
+`git tag vX.Y.Z && git push origin vX.Y.Z`, then publish it with `gh release create vX.Y.Z --generate-notes`. The tag must match `VERSION`.
+
 ## Local testing tips
 
 Point the tool at a scratch config with `PRBAR_HOME=/tmp/prbar-test`, drop a hand-written `cache.json` there and run `python3 plugin/prbar.1m.py` to see the SwiftBar output.
