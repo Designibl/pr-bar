@@ -25,8 +25,8 @@ AMBER = "#8A5A00,#F5C451"
 BLUE = "#0B5CAD,#6CB2FF"
 GRAY = "#5F6368,#A0A4AA"
 
-BUCKET_COLOR = {"review": BLUE, "ready": GREEN, "fixes": RED, "draft": GRAY}
-BUCKET_ICON = {"review": "eye", "ready": "checkmark.circle", "fixes": "exclamationmark.triangle", "draft": "pencil.circle"}
+BUCKET_COLOR = {"review": BLUE, "merge": GREEN, "ready": GREEN, "fixes": RED, "draft": GRAY}
+BUCKET_ICON = {"review": "eye", "merge": "arrow.triangle.merge", "ready": "checkmark.circle", "fixes": "exclamationmark.triangle", "draft": "pencil.circle"}
 
 
 def clean(s):
@@ -81,6 +81,8 @@ def render_pr(pr, key, agents):
     )
     # --- details submenu (depth 2)
     out("%s · %s" % (pr["repo"], pr["branch"] or "?"), 2, color=GRAY)
+    if key == "fixes" and pr.get("fix_reasons"):
+        out("Needs: %s" % ", ".join(pr["fix_reasons"]), 2, color=RED)
     if key == "review":
         out("Author: @%s" % pr["author"], 2, color=GRAY)
     out("%d files · +%d / -%d lines" % (pr["files"], pr["additions"], pr["deletions"]), 2)
