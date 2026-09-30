@@ -3,6 +3,12 @@
 Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
+### Added
+- **Ready to merge** section for your approved PRs that have nothing left to fix.
+- "Needs: …" line on PRs awaiting fixes explaining why.
+
+### Changed
+- **Awaiting fixes** now also includes PRs with unresolved review threads and merge conflicts. Only failing *required* checks count as blocking CI.
 
 ## [0.2.0] - 2026-09-30
 ### Added

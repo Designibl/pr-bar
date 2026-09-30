@@ -42,6 +42,16 @@ class Classify(unittest.TestCase):
         failing["commits"]["nodes"][0]["commit"]["statusCheckRollup"]["state"] = "FAILURE"
         self.assertEqual(c.normalise(failing)["bucket"], "fixes")
 
+    def test_fix_reasons_and_merge(self):
+        n = c.normalise(node(reviewThreads={"nodes": [{"isResolved": False}, {"isResolved": True}]}))
+        self.assertEqual(n["bucket"], "fixes")
+        self.assertEqual(n["fix_reasons"], ["1 unresolved comment"])
+        self.assertEqual(c.normalise(node(reviewDecision="APPROVED"))["bucket"], "merge")
+        self.assertEqual(c.normalise(node(reviewDecision="APPROVED", mergeable="CONFLICTING"))["bucket"], "fixes")
+        flaky = node(_ci_blocking=False)
+        flaky["commits"]["nodes"][0]["commit"]["statusCheckRollup"]["state"] = "FAILURE"
+        self.assertEqual(c.normalise(flaky)["bucket"], "ready")
+
     def test_review_requested_group(self):
         prs = [c.normalise(node()), c.normalise(node(number=8), True)]
         g = c.group(prs)

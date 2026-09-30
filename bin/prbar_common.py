@@ -187,16 +187,29 @@ def fmt_age(secs):
     return "<1m"
 
 
+def fix_reasons(pr):
+    """Why a PR I authored needs work: changes requested, open threads, conflicts, blocking CI."""
+    reasons = []
+    if pr["review_decision"] == "CHANGES_REQUESTED":
+        reasons.append("changes requested")
+    if pr.get("unresolved_threads"):
+        n = pr["unresolved_threads"]
+        reasons.append("%d unresolved comment%s" % (n, "" if n == 1 else "s"))
+    if pr["mergeable"] == "CONFLICTING":
+        reasons.append("merge conflicts")
+    if pr.get("ci_blocking"):
+        reasons.append("blocking CI failing")
+    return reasons
+
+
 def classify(pr):
-    """Status bucket for a PR I authored: draft | fixes | ready."""
+    """Status bucket for a PR I authored: draft | fixes | merge | ready."""
     if pr["draft"]:
         return "draft"
-    if (
-        pr["review_decision"] == "CHANGES_REQUESTED"
-        or pr["ci"] in ("FAILURE", "ERROR")
-        or pr["mergeable"] == "CONFLICTING"
-    ):
+    if fix_reasons(pr):
         return "fixes"
+    if pr["review_decision"] == "APPROVED":
+        return "merge"
     return "ready"
 
 
@@ -205,6 +218,8 @@ def normalise(node, review_requested=False):
     rollup = commit.get("statusCheckRollup") or {}
     comments = [c.get("body") or "" for c in (node.get("comments") or {}).get("nodes", [])]
     issues, previews = extract_links(node.get("body"), *comments)
+    threads = (node.get("reviewThreads") or {}).get("nodes") or []
+    ci = rollup.get("state")
     pr = {
         "number": node["number"],
         "title": node["title"],
@@ -220,17 +235,21 @@ def normalise(node, review_requested=False):
         "mergeable": node.get("mergeable"),
         "merge_state": node.get("mergeStateStatus"),
         "review_decision": node.get("reviewDecision"),
-        "ci": rollup.get("state"),
+        "ci": ci,
+        "ci_blocking": node.get("_ci_blocking", ci in ("FAILURE", "ERROR")),
+        "unresolved_threads": sum(1 for t in threads if t and not t.get("isResolved")),
         "issues": issues,
         "previews": previews,
         "review_requested": review_requested,
     }
+    pr["fix_reasons"] = fix_reasons(pr)
     pr["bucket"] = classify(pr)
     return pr
 
 
 SECTIONS = [
     ("review", "Awaiting your review"),
+    ("merge", "Ready to merge"),
     ("ready", "Ready for review"),
     ("fixes", "Awaiting fixes"),
     ("draft", "In draft"),

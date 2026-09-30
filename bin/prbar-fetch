@@ -16,13 +16,14 @@ query($q: String!) {
   search(query: $q, type: ISSUE, first: 50) {
     nodes {
       ... on PullRequest {
-        number title url isDraft body headRefName updatedAt
+        id number title url isDraft body headRefName updatedAt
         additions deletions changedFiles
         mergeable mergeStateStatus reviewDecision
         author { login }
         repository { nameWithOwner }
         commits(last: 1) { nodes { commit { committedDate statusCheckRollup { state } } } }
         comments(last: 30) { nodes { body } }
+        reviewThreads(first: 100) { nodes { isResolved } }
       }
     }
   }
@@ -41,6 +42,43 @@ def gh(*args):
 def search(q):
     data = json.loads(gh("api", "graphql", "-f", "query=" + QUERY, "-f", "q=" + q))
     return [n for n in data["data"]["search"]["nodes"] if n]
+
+
+def required_failures(nodes):
+    """Set `_ci_blocking` on PRs whose rollup is failing: True if a *required* check fails.
+
+    If the branch has no required checks at all, any failure counts as blocking.
+    """
+    def rollup_state(n):
+        commit = ((n.get("commits") or {}).get("nodes") or [{}])[0].get("commit") or {}
+        return (commit.get("statusCheckRollup") or {}).get("state")
+
+    failing = [n for n in nodes if rollup_state(n) in ("FAILURE", "ERROR")]
+    if not failing:
+        return
+    parts = []
+    for i, n in enumerate(failing):
+        parts.append(
+            'p%d: node(id: "%s") { ... on PullRequest { commits(last: 1) { nodes { commit { statusCheckRollup {'
+            ' contexts(first: 100) { nodes { __typename'
+            ' ... on CheckRun { conclusion isRequired(pullRequestId: "%s") }'
+            ' ... on StatusContext { state isRequired(pullRequestId: "%s") } } } } } } } } }'
+            % (i, n["id"], n["id"], n["id"])
+        )
+    try:
+        data = json.loads(gh("api", "graphql", "-f", "query=query { %s }" % " ".join(parts)))["data"]
+    except Exception:
+        return  # fall back to treating any failure as blocking
+    bad = ("FAILURE", "ERROR", "TIMED_OUT", "CANCELLED", "STARTUP_FAILURE", "ACTION_REQUIRED")
+    for i, n in enumerate(failing):
+        try:
+            ctxs = data["p%d" % i]["commits"]["nodes"][0]["commit"]["statusCheckRollup"]["contexts"]["nodes"]
+        except (KeyError, TypeError, IndexError):
+            continue
+        required = [x for x in ctxs if x and x.get("isRequired")]
+        n["_ci_blocking"] = (
+            any((x.get("conclusion") or x.get("state")) in bad for x in required) if required else True
+        )
 
 
 def commits_behind():
@@ -72,6 +110,7 @@ def main():
             "is:pr is:open archived:false review-requested:%s -author:%s sort:updated-desc"
             % (login, login)
         )
+        required_failures(mine)
         prs = [c.normalise(n) for n in mine] + [c.normalise(n, True) for n in asked]
         write_cache({"fetched_at": now, "login": login, "prs": prs, "error": None,
                      "update_behind": commits_behind()})
