@@ -29,7 +29,7 @@ A macOS menu bar tracker for your GitHub pull requests. A launch agent polls Git
 - `python3` (ships with the Xcode Command Line Tools: `xcode-select --install`)
 - Logged in to GitHub: `gh auth login`
 - Launch SwiftBar once and pick a plugin folder
-- Optional: an agent CLI such as `claude`, `codex`, `gemini` or `opencode` on your PATH
+- Optional: an agent CLI such as `claude`, `codex`, `gemini`, `opencode` or [Claude Squad](https://github.com/smtg-ai/claude-squad) (`cs`) on your PATH
 
 ## Install
 
@@ -66,6 +66,14 @@ Menu actions              -> bin/prbar-ctl (refresh, interval, copy, agents)
 ```
 
 The plugin never calls GitHub itself, so the menu stays instant. Changing the interval rewrites and reloads the launch agent.
+
+## Claude Squad
+
+If `cs` (or `claude-squad`) is on your PATH it appears as an agent. Claude Squad runs sessions in tmux worktrees and can't be handed a prompt, so **Review with Claude Squad** opens it in the PR's local clone and copies the review prompt to your clipboard; paste it into a new session. PR Bar finds the clone by scanning `~/Developer`, `~/code`, `~/src`, `~/Projects` and `~/dev` for a matching `origin`. Override in `~/.config/prbar/config.json`:
+
+```json
+{"repo_dirs": {"owner/repo": "~/path/to/clone"}, "code_dirs": ["~/work"]}
+```
 
 ## Troubleshooting
 

@@ -135,14 +135,31 @@ def main(argv):
         c.save_config(cfg)
         swiftbar_refresh()
     elif cmd == "review":
-        binary, url = c.resolve_agent(args[0]) or args[0], args[1]
+        key, url = args[0], args[1]
+        binary = c.resolve_agent(key) or key
         prompt = (
             "Review pull request %s. Use the gh CLI to read the description, diff, "
             "CI status and existing comments, then give me concise, actionable review feedback." % url
         )
-        terminal_run("%s %s" % (shlex.quote(binary), shlex.quote(prompt)))
+        if key in c.INTERACTIVE:
+            # Can't pass a prompt in: open it in the PR's repo and put the prompt on the clipboard.
+            repo = "/".join(url.split("/")[3:5])
+            subprocess.run(["pbcopy"], input=prompt, text=True)
+            terminal_run("cd %s && %s" % (shlex.quote(c.find_repo_dir(repo) or os.path.expanduser("~")),
+                                          shlex.quote(binary)))
+            notify("Review prompt copied - paste it into a new %s session" % c.AGENTS[key])
+        else:
+            terminal_run("%s %s" % (shlex.quote(binary), shlex.quote(prompt)))
     elif cmd == "session":
-        terminal_run(shlex.quote(c.resolve_agent(args[0]) or args[0]))
+        key = args[0]
+        binary = c.resolve_agent(key) or key
+        if key in c.INTERACTIVE:
+            prs = (c.load_cache() or {}).get("prs", [])
+            mine = [p for p in prs if not p["review_requested"]] or prs
+            where = (mine and c.find_repo_dir(mine[0]["repo"])) or os.path.expanduser("~")
+            terminal_run("cd %s && %s" % (shlex.quote(where), shlex.quote(binary)))
+        else:
+            terminal_run(shlex.quote(binary))
     else:
         print(__doc__)
         return 2

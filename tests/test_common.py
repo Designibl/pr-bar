@@ -83,5 +83,20 @@ class Agents(unittest.TestCase):
             c.CONFIG_FILE = old
 
 
+class Squad(unittest.TestCase):
+    def test_repo_dir_override(self):
+        import json, tempfile
+        d = tempfile.mkdtemp()
+        cfg = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False)
+        json.dump({"repo_dirs": {"o/r": d}}, cfg); cfg.close()
+        old = c.CONFIG_FILE
+        c.CONFIG_FILE = Path(cfg.name)
+        try:
+            self.assertEqual(c.find_repo_dir("o/r"), d)
+            self.assertIn("claude-squad", c.INTERACTIVE)
+        finally:
+            c.CONFIG_FILE = old
+
+
 if __name__ == "__main__":
     unittest.main()
