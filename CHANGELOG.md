@@ -3,6 +3,8 @@
 Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
+### Added
+- **Update PR Bar** menu item, with an indicator when your clone is behind `main`.
 
 ## [0.1.0] - 2026-09-30
 ### Added

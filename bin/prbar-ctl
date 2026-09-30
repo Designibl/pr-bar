@@ -3,6 +3,7 @@
 
 Usage:
   prbar-ctl refresh
+  prbar-ctl update                   (git pull this clone, reload agent)
   prbar-ctl set-interval <seconds>
   prbar-ctl install-agent            (write + load the launch agent)
   prbar-ctl uninstall-agent
@@ -71,6 +72,29 @@ def terminal_run(command):
     run("osascript", "-e", script)
 
 
+def git(*args):
+    return run("/usr/bin/git", "-C", str(c.ROOT), *args)
+
+
+def update_self():
+    """Fast-forward this clone to origin/main and reload the launch agent."""
+    if git("rev-parse", "--is-inside-work-tree").returncode != 0:
+        return "Not a git clone; update manually."
+    if git("status", "--porcelain").stdout.strip():
+        return "Update skipped: local changes in the clone."
+    if git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip() != "main":
+        return "Update skipped: clone is not on main."
+    old = c.version()
+    res = git("pull", "--ff-only", "origin", "main")
+    if res.returncode != 0:
+        return "Update failed: " + (res.stderr.strip().splitlines() or ["git pull"])[-1]
+    write_plist(c.load_config()["interval"])
+    load_agent()
+    run("/usr/bin/python3", FETCH)
+    new = c.version()
+    return "Updated %s -> %s" % (old, new) if new != old else "Already up to date (v%s)" % new
+
+
 def main(argv):
     if not argv:
         print(__doc__)
@@ -79,6 +103,9 @@ def main(argv):
 
     if cmd == "refresh":
         run("/usr/bin/python3", FETCH)
+        swiftbar_refresh()
+    elif cmd == "update":
+        notify(update_self())
         swiftbar_refresh()
     elif cmd == "set-interval":
         cfg = c.load_config()
