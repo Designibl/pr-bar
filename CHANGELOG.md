@@ -4,6 +4,10 @@ Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](htt
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-30
+### Added
+- **Copy summary → My PRs needing review**: your open PRs waiting on someone else's review.
+
 ## [0.3.0] - 2026-09-30
 ### Added
 - **Ready to merge** section for your approved PRs that have nothing left to fix.

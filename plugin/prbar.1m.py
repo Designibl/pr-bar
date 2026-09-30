@@ -148,7 +148,7 @@ def main():
 
     # --- clipboard
     out("Copy summary", sfimage="doc.on.clipboard")
-    for scope, scope_label in (("all", "All PRs"), ("review", "Needs my review")):
+    for scope, scope_label in (("all", "All PRs"), ("review", "Needs my review"), ("mine-review", "My PRs needing review")):
         out(scope_label, 1)
         for fmt, fmt_label in (("md", "Markdown"), ("slack", "Slack"), ("text", "Plain text")):
             ctl(fmt_label, "copy", fmt, scope, depth=2)

@@ -73,6 +73,11 @@ class Format(unittest.TestCase):
         self.assertIn("#8", out)
         self.assertNotIn("#7", out)
 
+    def test_mine_review_scope(self):
+        out = c.format_summary(self.prs, "text", "mine-review")
+        self.assertIn("#7", out)
+        self.assertNotIn("#8", out)
+
     def test_age(self):
         self.assertEqual(c.fmt_age(90000), "1d")
         self.assertEqual(c.fmt_age(30), "<1m")

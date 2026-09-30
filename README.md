@@ -13,7 +13,7 @@ A macOS menu bar tracker for your GitHub pull requests. A launch agent polls Git
 - Links found in the PR description/comments: Linear issues, GitHub issues, and previews (Vercel, Netlify, Cloudflare Pages…)
 - Click a PR to open it, or use its submenu to **Review with** an installed agent (Claude Code, Codex, Gemini CLI, opencode) in Terminal
 - **Start a session** with any detected agent
-- **Copy summary** to the clipboard as Markdown, Slack or plain text — all PRs or only those needing your review
+- **Copy summary** to the clipboard as Markdown, Slack or plain text — all PRs, only those needing your review, or only your PRs waiting on someone else's review
 - **Settings**: poll interval (1m, 5m, 15m, 30m, 1h, 6h, day), enable/disable detected agents, and **Refresh now**
 - Colours are light/dark pairs so they stay readable in both appearances
 

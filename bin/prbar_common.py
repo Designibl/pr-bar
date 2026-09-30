@@ -290,12 +290,20 @@ def merge_text(pr):
     }.get(pr["merge_state"], "merge status pending")
 
 
+# summary scope -> sections included (None = all)
+SCOPES = {"all": None, "review": {"review"}, "mine-review": {"ready"}}
+
+
 def format_summary(prs, fmt="md", scope="all"):
-    """Render PRs for the clipboard. fmt: md | slack | text. scope: all | review."""
+    """Render PRs for the clipboard. fmt: md | slack | text.
+
+    scope: all | review (others' PRs needing my review) | mine-review (my PRs needing someone else's review).
+    """
+    wanted = SCOPES[scope]
     grouped = group(prs)
     lines = []
     for key, title in SECTIONS:
-        if scope == "review" and key != "review":
+        if wanted is not None and key not in wanted:
             continue
         items = grouped[key]
         if not items:
