@@ -68,5 +68,20 @@ class Format(unittest.TestCase):
         self.assertEqual(c.fmt_age(30), "<1m")
 
 
+class Agents(unittest.TestCase):
+    def test_config_override(self):
+        import os, tempfile, json
+        exe = tempfile.NamedTemporaryFile(delete=False)
+        exe.close(); os.chmod(exe.name, 0o755)
+        old = c.CONFIG_FILE
+        cfg = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False)
+        json.dump({"agent_paths": {"claude": exe.name}}, cfg); cfg.close()
+        c.CONFIG_FILE = Path(cfg.name)
+        try:
+            self.assertEqual(c.resolve_agent("claude"), exe.name)
+        finally:
+            c.CONFIG_FILE = old
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -56,7 +56,7 @@ The plugin never calls GitHub itself, so the menu stays instant. Changing the in
 
 - Menu shows `!` — the last poll failed; the message is in the menu. Check `gh auth status` and `~/.config/prbar/fetch.log`.
 - "No data yet" — run **Refresh now**, or `bin/prbar-ctl install-agent`.
-- Agent missing from menu — ensure its binary is on your PATH (`/opt/homebrew/bin`, `~/.local/bin`, `~/.npm-global/bin` are checked).
+- Agent missing from menu — agents are found on your PATH (`/opt/homebrew/bin`, `~/.local/bin`, `~/.npm-global/bin` are checked). Claude Code bundled with the Claude desktop app is detected automatically. For anything else, set a path in `~/.config/prbar/config.json`: `{"agent_paths": {"claude": "/path/to/claude"}}`.
 
 ## Development
 
