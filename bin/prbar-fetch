@@ -43,6 +43,18 @@ def search(q):
     return [n for n in data["data"]["search"]["nodes"] if n]
 
 
+def commits_behind():
+    """How many commits origin/main is ahead of this clone; None if unknown."""
+    try:
+        git = ["/usr/bin/git", "-C", str(c.ROOT)]
+        subprocess.run(git + ["fetch", "-q", "origin", "main"], capture_output=True, timeout=30, check=True)
+        out = subprocess.run(git + ["rev-list", "--count", "HEAD..origin/main"],
+                             capture_output=True, text=True, timeout=10, check=True).stdout
+        return int(out.strip())
+    except Exception:
+        return None
+
+
 def write_cache(payload):
     c.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(c.CONFIG_DIR))
@@ -61,7 +73,8 @@ def main():
             % (login, login)
         )
         prs = [c.normalise(n) for n in mine] + [c.normalise(n, True) for n in asked]
-        write_cache({"fetched_at": now, "login": login, "prs": prs, "error": None})
+        write_cache({"fetched_at": now, "login": login, "prs": prs, "error": None,
+                     "update_behind": commits_behind()})
     except Exception as exc:  # keep stale data, surface the error in the menu
         old = c.load_cache() or {"prs": [], "login": None, "fetched_at": None}
         old["error"] = str(exc)[:300]

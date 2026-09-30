@@ -168,6 +168,9 @@ def main():
     ago = c.fmt_age(c.age_seconds(fetched)) if fetched else "never"
     out("@%s · updated %s ago · v%s" % (cache.get("login") or "?", ago, c.version()), color=GRAY)
     ctl("Refresh now", "refresh", refresh=True, sfimage="arrow.clockwise")
+    behind = cache.get("update_behind") or 0
+    ctl("Update PR Bar" + (" (%d new commit%s)" % (behind, "" if behind == 1 else "s") if behind else ""),
+        "update", refresh=True, sfimage="arrow.down.circle", **({"color": AMBER} if behind else {}))
     out("Settings", sfimage="gearshape")
     out("Poll interval", 1)
     for label, secs in c.INTERVALS:
