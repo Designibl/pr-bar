@@ -3,10 +3,13 @@
 Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
-### Added
-- Claude Squad (`cs`) support: start a session or open a review in the PR's local clone.
+
+## [0.2.0] - 2026-09-30
 ### Added
 - **Update PR Bar** menu item, with an indicator when your clone is behind `main`.
+- Claude Squad (`cs`) support: start a session or open a review in the PR's local clone.
+- Claude Code bundled with the desktop app is detected; `agent_paths` config override.
+- Version shown in the menu footer.
 
 ## [0.1.0] - 2026-09-30
 ### Added
