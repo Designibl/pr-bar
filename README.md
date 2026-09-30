@@ -3,6 +3,8 @@
 A macOS menu bar tracker for your GitHub pull requests. A launch agent polls GitHub with the
 [`gh` CLI](https://cli.github.com); a [SwiftBar](https://github.com/swiftbar/SwiftBar) plugin renders the result.
 
+<img width="293" height="327" alt="Screenshot 2026-09-30 at 09 11 38" src="https://github.com/user-attachments/assets/9ee5e995-5cac-43cc-b136-78a55eb4420f" />
+
 ## What it shows
 
 - Count of your open PRs (plus 👀 N for PRs awaiting **your** review — bound to your user, not your teams)
