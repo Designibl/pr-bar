@@ -108,14 +108,14 @@ def main(argv):
         c.save_config(cfg)
         swiftbar_refresh()
     elif cmd == "review":
-        binary, url = args[0], args[1]
+        binary, url = c.resolve_agent(args[0]) or args[0], args[1]
         prompt = (
             "Review pull request %s. Use the gh CLI to read the description, diff, "
             "CI status and existing comments, then give me concise, actionable review feedback." % url
         )
         terminal_run("%s %s" % (shlex.quote(binary), shlex.quote(prompt)))
     elif cmd == "session":
-        terminal_run(shlex.quote(args[0]))
+        terminal_run(shlex.quote(c.resolve_agent(args[0]) or args[0]))
     else:
         print(__doc__)
         return 2

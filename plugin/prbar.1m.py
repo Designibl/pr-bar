@@ -99,7 +99,7 @@ def render_pr(pr, key, agents):
             out("Preview: %s" % p["label"], 2, href=p["url"])
     sep(2)
     out("Open on GitHub", 2, href=pr["url"])
-    for binary, name, enabled in agents:
+    for binary, name, enabled, _path in agents:
         if enabled:
             ctl("Review with %s" % name, "review", binary, pr["url"], depth=2)
     out("Copy link", 2, bash="/bin/sh", param1="-c", param2="printf %s '" + pr["url"] + "' | pbcopy", terminal="false")
@@ -155,7 +155,7 @@ def main():
     # --- agents
     out("Start a session", sfimage="terminal")
     shown = False
-    for binary, name, enabled in agents:
+    for binary, name, enabled, _path in agents:
         if enabled:
             ctl(name, "session", binary, depth=1)
             shown = True
@@ -174,7 +174,7 @@ def main():
         ctl(label, "set-interval", str(secs), depth=2, refresh=True, checked="true" if cfg["interval"] == secs else "false")
     out("Agents", 1)
     if agents:
-        for binary, name, enabled in agents:
+        for binary, name, enabled, _path in agents:
             ctl(name, "toggle-agent", binary, depth=2, refresh=True, checked="true" if enabled else "false")
     else:
         out("None detected (claude, codex, gemini, opencode)", 2, color=GRAY)
