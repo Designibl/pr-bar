@@ -76,15 +76,40 @@ def load_cache():
         return None
 
 
+def _desktop_claude():
+    """Claude Code bundled with the Claude desktop app (not on PATH; path is versioned)."""
+    base = Path.home() / "Library" / "Application Support" / "Claude" / "claude-code"
+    best, best_key = None, None
+    for d in base.glob("*/claude.app/Contents/MacOS/claude"):
+        try:
+            key = tuple(int(x) for x in d.parents[3].name.split("."))
+        except ValueError:
+            continue
+        if os.access(str(d), os.X_OK) and (best_key is None or key > best_key):
+            best, best_key = str(d), key
+    return best
+
+
+def resolve_agent(binary):
+    """Absolute path for an agent: config override, then PATH, then known app bundles."""
+    override = load_config().get("agent_paths", {}).get(binary)
+    if override and os.access(os.path.expanduser(override), os.X_OK):
+        return os.path.expanduser(override)
+    found = shutil.which(binary, path=full_path())
+    if found:
+        return found
+    return _desktop_claude() if binary == "claude" else None
+
+
 def installed_agents():
-    """Return [(binary, display, enabled)] for agents found on PATH."""
+    """Return [(binary, display, enabled, path)] for agents we can find."""
     disabled = set(load_config().get("disabled_agents", []))
-    path = full_path()
-    return [
-        (b, name, b not in disabled)
-        for b, name in AGENTS.items()
-        if shutil.which(b, path=path)
-    ]
+    out = []
+    for b, name in AGENTS.items():
+        path = resolve_agent(b)
+        if path:
+            out.append((b, name, b not in disabled, path))
+    return out
 
 
 # ---------------------------------------------------------------- link parsing
