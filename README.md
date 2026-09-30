@@ -44,7 +44,7 @@ Uninstall with `./uninstall.sh`.
 
 ## Updating
 
-The plugin is a symlink into your clone and the launch agent runs from it, so updating is just:
+Use **Update PR Bar** in the menu (it shows how many commits you're behind), or do it by hand. It fast-forwards your clone's `main`, reloads the launch agent and refreshes; it refuses if the clone has local changes or isn't on `main`. The plugin is a symlink into your clone and the launch agent runs from it, so the manual steps are:
 
 ```bash
 cd pr-bar
