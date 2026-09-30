@@ -7,7 +7,7 @@ Usage:
   prbar-ctl set-interval <seconds>
   prbar-ctl install-agent            (write + load the launch agent)
   prbar-ctl uninstall-agent
-  prbar-ctl copy <md|slack|text> <all|review>
+  prbar-ctl copy <md|slack|text> <all|review|mine-review>
   prbar-ctl toggle-agent <binary>
   prbar-ctl review <binary> <pr-url>
   prbar-ctl session <binary>
