@@ -140,8 +140,10 @@ def main():
     # --- sections
     for key, label in c.SECTIONS:
         items = groups[key]
-        # `color` on a header makes SwiftBar drop its icon, so tint the symbol with sfcolor instead
-        out("%s (%d)" % (label, len(items)), sfimage=BUCKET_ICON[key], sfcolor=BUCKET_COLOR[key])
+        # color keeps the header enabled and coloured; sfcolor makes the icon a coloured (non-template)
+        # image, which SwiftBar otherwise hides when the title has a colour
+        out("%s (%d)" % (label, len(items)), color=BUCKET_COLOR[key], sfimage=BUCKET_ICON[key],
+            sfcolor=BUCKET_COLOR[key])
         for pr in items:
             render_pr(pr, key, agents)
         if not items:
