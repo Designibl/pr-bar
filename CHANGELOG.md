@@ -4,6 +4,13 @@ Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](htt
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-01
+### Changed
+- "Ready for review" is now orange so it stands apart from "Ready to merge".
+
+### Fixed
+- Section header icons not showing in the menu (tint with `sfcolor` instead of `color`).
+
 ## [0.4.0] - 2026-09-30
 ### Added
 - **Copy summary → My PRs needing review**: your open PRs waiting on someone else's review.
