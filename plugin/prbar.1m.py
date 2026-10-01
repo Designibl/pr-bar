@@ -24,8 +24,9 @@ GREEN = "#1B7F3B,#5CD07F"
 AMBER = "#8A5A00,#F5C451"
 BLUE = "#0B5CAD,#6CB2FF"
 GRAY = "#5F6368,#A0A4AA"
+ORANGE = "#B85C00,#FFA040"
 
-BUCKET_COLOR = {"review": BLUE, "merge": GREEN, "ready": GREEN, "fixes": RED, "draft": GRAY}
+BUCKET_COLOR = {"review": BLUE, "merge": GREEN, "ready": ORANGE, "fixes": RED, "draft": GRAY}
 BUCKET_ICON = {"review": "eye", "merge": "arrow.triangle.merge", "ready": "checkmark.circle", "fixes": "exclamationmark.triangle", "draft": "pencil.circle"}
 
 
@@ -139,7 +140,8 @@ def main():
     # --- sections
     for key, label in c.SECTIONS:
         items = groups[key]
-        out("%s (%d)" % (label, len(items)), color=BUCKET_COLOR[key], sfimage=BUCKET_ICON[key])
+        # `color` on a header makes SwiftBar drop its icon, so tint the symbol with sfcolor instead
+        out("%s (%d)" % (label, len(items)), sfimage=BUCKET_ICON[key], sfcolor=BUCKET_COLOR[key])
         for pr in items:
             render_pr(pr, key, agents)
         if not items:
