@@ -4,6 +4,10 @@ Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](htt
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-01
+### Fixed
+- Section headers were greyed out and uncoloured after 0.4.1. They are enabled and coloured again, with the icon still showing.
+
 ## [0.4.1] - 2026-10-01
 ### Changed
 - "Ready for review" is now orange so it stands apart from "Ready to merge".
