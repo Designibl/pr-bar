@@ -4,6 +4,10 @@ Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](htt
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-01
+### Fixed
+- Section header icons disappearing after hovering over the item. The section colour is now carried by the icon rather than the header text.
+
 ## [0.4.2] - 2026-10-01
 ### Fixed
 - Section headers were greyed out and uncoloured after 0.4.1. They are enabled and coloured again, with the icon still showing.
