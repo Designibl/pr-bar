@@ -140,10 +140,10 @@ def main():
     # --- sections
     for key, label in c.SECTIONS:
         items = groups[key]
-        # color keeps the header enabled and coloured; sfcolor makes the icon a coloured (non-template)
-        # image, which SwiftBar otherwise hides when the title has a colour
-        out("%s (%d)" % (label, len(items)), color=BUCKET_COLOR[key], sfimage=BUCKET_ICON[key],
-            sfcolor=BUCKET_COLOR[key])
+        # No `color` here: SwiftBar rebuilds a coloured item's title on hover and drops its icon. A no-op
+        # action keeps the header enabled instead, and sfcolor carries the section colour on the icon.
+        out("%s (%d)" % (label, len(items)), sfimage=BUCKET_ICON[key], sfcolor=BUCKET_COLOR[key],
+            bash="/usr/bin/true", terminal="false", refresh="false")
         for pr in items:
             render_pr(pr, key, agents)
         if not items:
