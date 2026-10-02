@@ -213,7 +213,7 @@ def classify(pr):
     return "ready"
 
 
-def normalise(node, review_requested=False):
+def normalise(node, review_requested=False, review_via=None):
     commit = ((node.get("commits") or {}).get("nodes") or [{}])[0].get("commit") or {}
     rollup = commit.get("statusCheckRollup") or {}
     comments = [c.get("body") or "" for c in (node.get("comments") or {}).get("nodes", [])]
@@ -241,6 +241,7 @@ def normalise(node, review_requested=False):
         "issues": issues,
         "previews": previews,
         "review_requested": review_requested,
+        "review_via": list(review_via or []),
     }
     pr["fix_reasons"] = fix_reasons(pr)
     pr["bucket"] = classify(pr)
@@ -263,6 +264,23 @@ def group(prs):
         key = "review" if pr["review_requested"] else pr["bucket"]
         out[key].append(pr)
     return out
+
+
+YOU = "You"
+
+
+def review_groups(items):
+    """Split PRs awaiting my review by who was asked: me directly first, then each team (sorted).
+
+    A PR requested of me and a team (or several teams) appears under each. PRs cached without
+    `review_via` count as direct requests.
+    """
+    by = {}
+    for pr in items:
+        for via in pr.get("review_via") or [YOU]:
+            by.setdefault(via, []).append(pr)
+    order = sorted(by, key=lambda v: (v != YOU, v.lower()))
+    return [(v, by[v]) for v in order]
 
 
 # ------------------------------------------------------------------ formatting
@@ -302,29 +320,40 @@ def format_summary(prs, fmt="md", scope="all"):
     wanted = SCOPES[scope]
     grouped = group(prs)
     lines = []
+
+    def heading(text, sub=False):
+        if fmt == "md":
+            lines.append(("*%s*" if sub else "**%s**") % text)
+        elif fmt == "slack":
+            lines.append(("_%s_" if sub else "*%s*") % text)
+        else:
+            lines.append(text)
+
+    def entry(pr):
+        meta = "%s, +%d/-%d, %s" % (
+            pr["repo"], pr["additions"], pr["deletions"], CI_TEXT.get(pr["ci"], "no CI")
+        )
+        label = "#%d %s" % (pr["number"], pr["title"])
+        if fmt == "md":
+            return "- [%s](%s) (%s)" % (label, pr["url"], meta)
+        # Slack's composer doesn't parse <url|label> on paste (it shows the raw markup), so use a bare
+        # URL after a space-delimited separator; it autolinks and can't pick up trailing punctuation.
+        return "- %s (%s) %s" % (label, meta, pr["url"])
+
     for key, title in SECTIONS:
         if wanted is not None and key not in wanted:
             continue
         items = grouped[key]
         if not items:
             continue
-        if fmt == "md":
-            lines.append("**%s (%d)**" % (title, len(items)))
-        elif fmt == "slack":
-            lines.append("*%s (%d)*" % (title, len(items)))
+        heading("%s (%d)" % (title, len(items)))
+        if key == "review":
+            for via, sub in review_groups(items):
+                label = "Requested of you" if via == YOU else "Team %s" % via
+                heading("%s (%d)" % (label, len(sub)), sub=True)
+                lines.extend(entry(pr) for pr in sub)
         else:
-            lines.append("%s (%d)" % (title, len(items)))
-        for pr in items:
-            meta = "%s, +%d/-%d, %s" % (
-                pr["repo"], pr["additions"], pr["deletions"], CI_TEXT.get(pr["ci"], "no CI")
-            )
-            label = "#%d %s" % (pr["number"], pr["title"])
-            if fmt == "md":
-                lines.append("- [%s](%s) (%s)" % (label, pr["url"], meta))
-            elif fmt == "slack":
-                lines.append("• <%s|%s> (%s)" % (pr["url"], label.replace("|", "/"), meta))
-            else:
-                lines.append("- %s (%s) %s" % (label, meta, pr["url"]))
+            lines.extend(entry(pr) for pr in items)
         lines.append("")
     return "\n".join(lines).strip() or "No open pull requests."
 

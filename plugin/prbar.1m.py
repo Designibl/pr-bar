@@ -144,8 +144,14 @@ def main():
         # action keeps the header enabled instead, and sfcolor carries the section colour on the icon.
         out("%s (%d)" % (label, len(items)), sfimage=BUCKET_ICON[key], sfcolor=BUCKET_COLOR[key],
             bash="/usr/bin/true", terminal="false", refresh="false")
-        for pr in items:
-            render_pr(pr, key, agents)
+        if key == "review" and items:
+            for via, sub in c.review_groups(items):
+                out(("Requested of you" if via == c.YOU else "Team %s" % via) + " (%d)" % len(sub), 1, color=GRAY)
+                for pr in sub:
+                    render_pr(pr, key, agents)
+        else:
+            for pr in items:
+                render_pr(pr, key, agents)
         if not items:
             out("None", 1, color=GRAY)
     sep()
