@@ -3,6 +3,8 @@
 Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
+### Fixed
+- Polling could be blocked by macOS TCC when the clone lives in a protected folder (Documents, Desktop, iCloud Drive). The launch agent now runs a copy of the fetch scripts from `~/.config/prbar/agent/`.
 
 ## [0.4.3] - 2026-10-01
 ### Fixed
