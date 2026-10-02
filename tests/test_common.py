@@ -90,6 +90,13 @@ class Format(unittest.TestCase):
         self.assertLess(out.index("Team o/alpha"), out.index("Team o/zeta"))
         self.assertIn("Awaiting your review (3)", out)
 
+    def test_review_count(self):
+        items = [c.normalise(node(number=1), True, [c.YOU]),
+                 c.normalise(node(number=2), True, ["o/t"]),
+                 c.normalise(node(number=3), True, [c.YOU, "o/t"])]
+        self.assertEqual(c.review_count(items), 2)
+        self.assertEqual(c.review_count(items, True), 3)
+
     def test_age(self):
         self.assertEqual(c.fmt_age(90000), "1d")
         self.assertEqual(c.fmt_age(30), "<1m")

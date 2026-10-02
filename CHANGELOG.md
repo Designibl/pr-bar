@@ -4,7 +4,7 @@ Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](htt
 
 ## [Unreleased]
 ### Changed
-- Awaiting your review is split into PRs requested of you and one group per team you're in, in the menu and summaries. The 👀 count in the menu bar still counts only PRs requested of you directly.
+- Awaiting your review is split into PRs requested of you and one group per team you're in, in the menu and summaries. The 👀 count in the menu bar counts only PRs requested of you directly by default; Settings > Count team review requests includes team ones.
 ### Fixed
 - Slack summary links no longer paste as raw `<url|label>` markup; they use bare, autolinking URLs.
 ### Fixed

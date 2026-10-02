@@ -48,7 +48,7 @@ EXECUTABLES = {"claude-squad": ["cs", "claude-squad"]}
 # agents that manage their own sessions/worktrees and can't take an initial prompt
 INTERACTIVE = {"claude-squad"}
 
-DEFAULT_CONFIG = {"interval": 300, "disabled_agents": []}
+DEFAULT_CONFIG = {"interval": 300, "disabled_agents": [], "count_team_reviews": False}
 
 EXTRA_PATHS = [
     "/opt/homebrew/bin",
@@ -267,6 +267,13 @@ def group(prs):
 
 
 YOU = "You"
+
+
+def review_count(items, include_teams=False):
+    """PRs for the menu bar 👀 count: requested of me directly, plus team-only ones if asked."""
+    if include_teams:
+        return len(items)
+    return sum(1 for pr in items if YOU in (pr.get("review_via") or [YOU]))
 
 
 def review_groups(items):

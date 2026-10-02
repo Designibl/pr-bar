@@ -124,8 +124,7 @@ def main():
     prs = cache["prs"]
     groups = c.group(prs)
     mine = len(prs) - len(groups["review"])
-    # 👀 counts only PRs requested of me directly, not via a team
-    todo = sum(1 for pr in groups["review"] if c.YOU in (pr.get("review_via") or [c.YOU]))
+    todo = c.review_count(groups["review"], cfg.get("count_team_reviews"))
 
     # --- menu bar title
     title = str(mine) + ("  👀" + str(todo) if todo else "")
@@ -188,6 +187,8 @@ def main():
     out("Poll interval", 1)
     for label, secs in c.INTERVALS:
         ctl(label, "set-interval", str(secs), depth=2, refresh=True, checked="true" if cfg["interval"] == secs else "false")
+    ctl("Count team review requests in 👀", "toggle-team-count", depth=1, refresh=True,
+        checked="true" if cfg.get("count_team_reviews") else "false")
     out("Agents", 1)
     if agents:
         for binary, name, enabled, _path in agents:
