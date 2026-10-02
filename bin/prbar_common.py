@@ -6,7 +6,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(os.environ.get("PRBAR_ROOT") or Path(__file__).resolve().parent.parent)
 BIN = ROOT / "bin"
 CONFIG_DIR = Path(os.environ.get("PRBAR_HOME", str(Path.home() / ".config" / "prbar")))
 CONFIG_FILE = CONFIG_DIR / "config.json"
