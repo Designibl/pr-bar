@@ -65,7 +65,10 @@ class Format(unittest.TestCase):
 
     def test_formats(self):
         self.assertIn("[#7 Add thing](https://github.com/o/r/pull/7)", c.format_summary(self.prs, "md"))
-        self.assertIn("<https://github.com/o/r/pull/7|#7 Add thing>", c.format_summary(self.prs, "slack"))
+        slack = c.format_summary(self.prs, "slack")
+        self.assertIn("https://github.com/o/r/pull/7\n", slack + "\n")
+        self.assertNotIn("<http", slack)
+        self.assertNotIn("|", slack)
         self.assertIn("- #7 Add thing", c.format_summary(self.prs, "text"))
 
     def test_review_scope(self):
@@ -77,6 +80,22 @@ class Format(unittest.TestCase):
         out = c.format_summary(self.prs, "text", "mine-review")
         self.assertIn("#7", out)
         self.assertNotIn("#8", out)
+
+    def test_review_sections_by_team(self):
+        prs = [c.normalise(node(number=8, title="Direct"), True, [c.YOU]),
+               c.normalise(node(number=9, title="Team"), True, ["o/zeta"]),
+               c.normalise(node(number=10, title="Both"), True, [c.YOU, "o/alpha"])]
+        out = c.format_summary(prs, "text", "review")
+        self.assertLess(out.index("Requested of you (2)"), out.index("Team o/alpha (1)"))
+        self.assertLess(out.index("Team o/alpha"), out.index("Team o/zeta"))
+        self.assertIn("Awaiting your review (3)", out)
+
+    def test_review_count(self):
+        items = [c.normalise(node(number=1), True, [c.YOU]),
+                 c.normalise(node(number=2), True, ["o/t"]),
+                 c.normalise(node(number=3), True, [c.YOU, "o/t"])]
+        self.assertEqual(c.review_count(items), 2)
+        self.assertEqual(c.review_count(items, True), 3)
 
     def test_age(self):
         self.assertEqual(c.fmt_age(90000), "1d")

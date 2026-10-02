@@ -124,7 +124,7 @@ def main():
     prs = cache["prs"]
     groups = c.group(prs)
     mine = len(prs) - len(groups["review"])
-    todo = len(groups["review"])
+    todo = c.review_count(groups["review"], cfg.get("count_team_reviews"))
 
     # --- menu bar title
     title = str(mine) + ("  👀" + str(todo) if todo else "")
@@ -144,8 +144,14 @@ def main():
         # action keeps the header enabled instead, and sfcolor carries the section colour on the icon.
         out("%s (%d)" % (label, len(items)), sfimage=BUCKET_ICON[key], sfcolor=BUCKET_COLOR[key],
             bash="/usr/bin/true", terminal="false", refresh="false")
-        for pr in items:
-            render_pr(pr, key, agents)
+        if key == "review" and items:
+            for via, sub in c.review_groups(items):
+                out(("Requested of you" if via == c.YOU else "Team %s" % via) + " (%d)" % len(sub), 1, color=GRAY)
+                for pr in sub:
+                    render_pr(pr, key, agents)
+        else:
+            for pr in items:
+                render_pr(pr, key, agents)
         if not items:
             out("None", 1, color=GRAY)
     sep()
@@ -181,6 +187,8 @@ def main():
     out("Poll interval", 1)
     for label, secs in c.INTERVALS:
         ctl(label, "set-interval", str(secs), depth=2, refresh=True, checked="true" if cfg["interval"] == secs else "false")
+    ctl("Count team review requests in 👀", "toggle-team-count", depth=1, refresh=True,
+        checked="true" if cfg.get("count_team_reviews") else "false")
     out("Agents", 1)
     if agents:
         for binary, name, enabled, _path in agents:

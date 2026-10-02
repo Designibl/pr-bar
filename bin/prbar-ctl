@@ -9,6 +9,7 @@ Usage:
   prbar-ctl uninstall-agent
   prbar-ctl copy <md|slack|text> <all|review|mine-review>
   prbar-ctl toggle-agent <binary>
+  prbar-ctl toggle-team-count
   prbar-ctl review <binary> <pr-url>
   prbar-ctl session <binary>
 """
@@ -138,6 +139,11 @@ def main(argv):
         text = c.format_summary(cache["prs"], fmt, scope)
         subprocess.run(["pbcopy"], input=text, text=True)
         notify("Copied %s summary (%s)" % (fmt, scope))
+    elif cmd == "toggle-team-count":
+        cfg = c.load_config()
+        cfg["count_team_reviews"] = not cfg.get("count_team_reviews")
+        c.save_config(cfg)
+        swiftbar_refresh()
     elif cmd == "toggle-agent":
         cfg = c.load_config()
         dis = set(cfg.get("disabled_agents", []))

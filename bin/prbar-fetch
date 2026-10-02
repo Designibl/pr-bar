@@ -44,6 +44,36 @@ def search(q):
     return [n for n in data["data"]["search"]["nodes"] if n]
 
 
+def my_teams():
+    """'org/slug' for each team I'm in; empty if the token can't list them (needs read:org)."""
+    try:
+        data = json.loads(gh("api", "user/teams", "--paginate", "--slurp"))
+        return sorted("%s/%s" % (t["organization"]["login"], t["slug"]) for page in data for t in page)
+    except Exception:
+        return []
+
+
+def review_requests(login):
+    """[(node, via)] for open PRs awaiting my review: asked directly, or via a team I'm in."""
+    found = {}
+
+    def add(nodes, via):
+        for n in nodes:
+            entry = found.setdefault(n["id"], (n, []))
+            if via not in entry[1]:
+                entry[1].append(via)
+
+    add(search("is:pr is:open archived:false user-review-requested:%s -author:%s sort:updated-desc"
+               % (login, login)), c.YOU)
+    for team in my_teams():
+        try:
+            add(search("is:pr is:open archived:false team-review-requested:%s -author:%s sort:updated-desc"
+                       % (team, login)), team)
+        except Exception:
+            continue  # a team the token can't search shouldn't fail the whole poll
+    return list(found.values())
+
+
 def required_failures(nodes):
     """Set `_ci_blocking` on PRs whose rollup is failing: True if a *required* check fails.
 
@@ -106,12 +136,9 @@ def main():
     try:
         login = gh("api", "user", "--jq", ".login").strip()
         mine = search("is:pr is:open archived:false author:%s sort:updated-desc" % login)
-        asked = search(
-            "is:pr is:open archived:false review-requested:%s -author:%s sort:updated-desc"
-            % (login, login)
-        )
+        asked = review_requests(login)
         required_failures(mine)
-        prs = [c.normalise(n) for n in mine] + [c.normalise(n, True) for n in asked]
+        prs = [c.normalise(n) for n in mine] + [c.normalise(n, True, via) for n, via in asked]
         write_cache({"fetched_at": now, "login": login, "prs": prs, "error": None,
                      "update_behind": commits_behind()})
     except Exception as exc:  # keep stale data, surface the error in the menu
