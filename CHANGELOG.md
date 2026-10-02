@@ -3,11 +3,12 @@
 Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
+
+## [0.5.0] - 2026-10-02
 ### Changed
 - Awaiting your review is split into PRs requested of you and one group per team you're in, in the menu and summaries. The 👀 count in the menu bar counts only PRs requested of you directly by default; Settings > Count team review requests includes team ones.
 ### Fixed
 - Slack summary links no longer paste as raw `<url|label>` markup; they use bare, autolinking URLs.
-### Fixed
 - Polling could be blocked by macOS TCC when the clone lives in a protected folder (Documents, Desktop, iCloud Drive). The launch agent now runs a copy of the fetch scripts from `~/.config/prbar/agent/`.
 
 ## [0.4.3] - 2026-10-01
