@@ -124,7 +124,8 @@ def main():
     prs = cache["prs"]
     groups = c.group(prs)
     mine = len(prs) - len(groups["review"])
-    todo = len(groups["review"])
+    # 👀 counts only PRs requested of me directly, not via a team
+    todo = sum(1 for pr in groups["review"] if c.YOU in (pr.get("review_via") or [c.YOU]))
 
     # --- menu bar title
     title = str(mine) + ("  👀" + str(todo) if todo else "")

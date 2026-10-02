@@ -7,7 +7,7 @@ A macOS menu bar tracker for your GitHub pull requests. A launch agent polls Git
 
 ## What it shows
 
-- Count of your open PRs (plus 👀 N for PRs awaiting your review, whether requested of you directly or of a team you're in)
+- Count of your open PRs (plus 👀 N for PRs awaiting **your** review — requested of you directly, not via a team)
 - Sections: **Awaiting your review** (split into *Requested of you* and one group per team; team lookup needs the `read:org` scope on your `gh` token), **Ready to merge** (approved, nothing left to fix), **Ready for review**, **Awaiting fixes** (changes requested, unresolved comments, conflicts or failing required checks), **In draft**
 - Per PR: files and +/- lines, age of latest commit (amber > 7d, red > 14d), CI status, merge status / conflicts, review decision
 - Links found in the PR description/comments: Linear issues, GitHub issues, and previews (Vercel, Netlify, Cloudflare Pages…)
