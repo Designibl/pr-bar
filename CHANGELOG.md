@@ -3,6 +3,8 @@
 Format: [Keep a Changelog](https://keepachangelog.com), versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
+### Changed
+- PRs assigned to you (GitHub assignees) are listed alongside your own PRs, not only the ones you authored.
 
 ## [0.5.0] - 2026-10-02
 ### Changed
