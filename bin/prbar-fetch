@@ -74,6 +74,11 @@ def review_requests(login):
     return list(found.values())
 
 
+def assigned_to(login):
+    """Open PRs assigned to me that someone else authored (my own PRs come from `author:`)."""
+    return search("is:pr is:open archived:false assignee:%s -author:%s sort:updated-desc" % (login, login))
+
+
 def required_failures(nodes):
     """Set `_ci_blocking` on PRs whose rollup is failing: True if a *required* check fails.
 
@@ -136,7 +141,11 @@ def main():
     try:
         login = gh("api", "user", "--jq", ".login").strip()
         mine = search("is:pr is:open archived:false author:%s sort:updated-desc" % login)
+        mine += assigned_to(login)
         asked = review_requests(login)
+        # A PR awaiting my review is listed once, under the review section.
+        asked_ids = {n["id"] for n, _ in asked}
+        mine = [n for n in {n["id"]: n for n in mine}.values() if n["id"] not in asked_ids]
         required_failures(mine)
         prs = [c.normalise(n) for n in mine] + [c.normalise(n, True, via) for n, via in asked]
         write_cache({"fetched_at": now, "login": login, "prs": prs, "error": None,
